@@ -1,0 +1,47 @@
+{
+    "packageName": "Actron Connect Integration",
+    "author": "Dale Coghlan",
+    "minimumHEVersion": "2.2.3",
+    "dateReleased": "2019-11-03",
+    "documentationLink": "https://github.com/dcoghlan/hubitat/tree/main/Actron_Connect_Integration",
+    "apps": [
+        {
+            "id": "d3a2b016-1ff4-48a4-97b8-93692be72d60",
+            "name": "Actron Connect Integration",
+            "namespace": "dcoghlan",
+            "location": "https://raw.githubusercontent.com/dcoghlan/hubitat/main/Actron_Connect_Integration/ACSM-app-parent.groovy",
+            "required": true,
+            "oauth": false,
+            "version": "1.0.0",
+            "primary": true
+        },
+        {
+            "id": "ccd9491d-54a5-4717-a875-ea802d73b879",
+            "name": "Actron Connect Service Manager",
+            "namespace": "dcoghlan",
+            "location": "https://raw.githubusercontent.com/dcoghlan/hubitat/main/Actron_Connect_Integration/ACSM-app-child.groovy",
+            "required": true,
+            "oauth": false,
+            "primary": false,
+            "version": "1.0.0"
+        }
+    ],
+    "drivers": [
+        {
+            "id": "2d8f47a4-abe5-4db7-9ec4-dcbbd962a07c",
+            "name": "Actron Connect AirConditioner",
+            "namespace": "dcoghlan",
+            "location": "https://raw.githubusercontent.com/dcoghlan/hubitat/main/Actron_Connect_Integration/ACSM-driver-aircon.groovy",
+            "required": true,
+            "version": "1.0.0"
+        },
+        {
+            "id": "69daac36-1969-4429-b93e-98db810a51d1",
+            "name": "Actron Connect Zone",
+            "namespace": "dcoghlan",
+            "location": "https://raw.githubusercontent.com/dcoghlan/hubitat/main/Actron_Connect_Integration/ACSM-driver-zone.groovy",
+            "required": true,
+            "version": "1.0.0"
+        }
+    ]
+}

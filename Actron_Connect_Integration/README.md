@@ -17,10 +17,24 @@ As I get more time, I may look to implement some of the other capabilities aroun
 
 > Before proceeding, please make sure you have already created and Actron Connect account and are able to log into the app on your phone or website.
 
+### HPM
+
+- Choose `install`
+- Choose `Browse by tags`
+- Select the tag `Temperature & Humidity`
+- Select `Actron Connect Integration by Dale Coghlan`
+- Select the option to configure the application once installed.
+- Click `Done` to install the parent app
+
+### Manual
+
 - Install the ACSM (Actron Connect Service Manager) parent and child apps
 - Install the ACSM drivers for the aircon and zone
 - In the Hubitat UI, click the button to `Add User App` and select `Actron Connect Integration`
 - Click `Done` to install the parent app
+
+### Setup Actron Connect Service Manager
+
 - Open the app `Actron Connect Integration` and select `Add a new Actron 'Connect Service Manager' child`
 - Enter your credentials used to sign into the the Actron Connect App
 - Leave the `Poll Every X Minutes` set to Never (this is not currently implemented yet)

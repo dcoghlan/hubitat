@@ -1,0 +1,18 @@
+{
+  "author": "Dale Coghlan",
+  "gitHubUrl": "https://github.com/dcoghlan/hubitat",
+  "packages": [
+    {
+      "id": "b64c73ae-f3c7-4b08-bdce-55bdf7fc0b3d",
+      "name": "Actron Connect Integration",
+      "category": "Integrations",
+      "location": "https://raw.githubusercontent.com/dcoghlan/hubitat/main/Actron_Connect_Integration/packageManifest.json",
+      "description": "Integration for Actron Connect",
+      "tags": [
+        "Cloud",
+        "Temperature & Humidity",
+        "Climate Control"
+      ]
+    }
+  ]
+}

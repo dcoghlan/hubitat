@@ -21,6 +21,8 @@
  *  Changes:
  *
  *  1.0.0 - 03/11/20 - Initial release.
+ *  1.0.1 - Fixed issue with rxDelayTime not being set by default which causes
+ *          issues with websocket updates being parsed.
  *
  */
 
@@ -67,7 +69,7 @@ preferences {
         input name: "logEnableTime", type: "enum", description: getPrefDesc("logEnableTime"), title: "<b>Disable debug logging after</b>", options: [[900:"15min"],[1800:"30min"],[3600:"60min"]], defaultValue: 1800
         input name: "logEnableZones", type: "bool", description: getPrefDesc("logEnableZones"), title: "<b>Enable debug logging on zones</b>", defaultValue: settings?.logEnableZones
         input name: "txtEnable", type: "bool", description: getPrefDesc("blank"), title: "<b>Enable descriptionText logging</b>", defaultValue: settings?.txtEnable
-        input name: "rxDelayTime", type: "enum", description: getPrefDesc("rxDelayTime"), title: "<b>Set Update Delay Time</b>", options: [[0:"Disabled"],[1000:"1s"],[2000:"2s"],[5000:"5s"],[10000:"10s"]], defaultValue: settings?.rxDelayTime
+        input name: "rxDelayTime", type: "enum", description: getPrefDesc("rxDelayTime"), title: "<b>Set Update Delay Time</b>", options: [[0:"Disabled"],[1000:"1s"],[2000:"2s"],[5000:"5s"],[10000:"10s"]], defaultValue: 2000
         input name: "simpleTempReporting", type: "bool", description: getPrefDesc("simpleTempReporting"), title: "<b>Enable simple temp reporting</b>", defaultValue: settings?.simpleTempReporting
     }
 }
@@ -351,7 +353,7 @@ def parse(String description) {
                 logIt("parse", "Received websocket DataType: ${msgDataType}(settings)", "info")
                 logIt("parse", msgData, "debug")
                 state.enabledZones = msgData.enabledZones
-                if (state?.rxDelay == "True") {
+                if ((state?.rxDelay == "True") && (settings?.rxDelayTime)) {
                     // if the rxDelay flag has been set due to an API request just being submitted, we
                     // want to delay the updating of the devices by x amount of milliseconds. This is
                     // to stop the enabled status of zones flapping from 0 > 1 > 0 etc which is really
@@ -364,7 +366,7 @@ def parse(String description) {
                     runInMillis(Long.valueOf(settings?.rxDelayTime), 'updateZonesEnabledWrapper', [overwrite: true, data: ["json": msgData]])
                 }
                 else {
-                    logIt("parse", "rxDelay not set. Instant execution", "debug")
+                    logIt("parse", "rxDelay flag or value not set. Instant execution", "debug")
                     updateZonesEnabled(msgData.enabledZones)
                 }
                 break
@@ -384,13 +386,13 @@ def parse(String description) {
                 state.enabledZones = msgData.enabledZones
     
                 logIt("parse", "Processing websocket DataType: ${msgDataType}(current state)", "debug")
-                if (state?.rxDelay == "True") {
-                    logIt("parse", "Delaying execution by ${Long.valueOf(settings?.rxDelayTime)} milliseconds", "debug")
+                if ((state?.rxDelay == "True") && (settings?.rxDelayTime)) {
+                    logIt("parse", "Delaying execution by ${settings?.rxDelayTime} milliseconds", "debug")
                     unschedule(updateCurrentState)
                     runInMillis(Long.valueOf(settings?.rxDelayTime), 'updateCurrentState', [overwrite: true, data: ["jsonState": msgData]])
                 }
                 else {
-                    logIt("parse", "rxDelay not set. Instant execution", "debug")
+                    logIt("parse", "rxDelay flag or value not set. Instant execution", "debug")
                     updateCurrentState(["jsonState": msgData])
                 }
                 break

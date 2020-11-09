@@ -223,14 +223,14 @@ def webSocketNegotiate() {
 	} catch(e) {
         logIt("webSocketNegotiate", "HTTP error: ${e}", "error")
 	}
-    webSocketConnect(state.ConnectionToken)
+    webSocketConnect()
 }
 
-def webSocketConnect(connectionToken) {
+def webSocketConnect() {
     logIt("webSocketConnect", "method invoked", "debug")
     logIt("webSocketConnect", "Opening websocket connection", "debug")
     
-    def encodedConnectionToken = java.net.URLEncoder.encode(connectionToken, "UTF-8")
+    def encodedConnectionToken = java.net.URLEncoder.encode(state.ConnectionToken, "UTF-8")
     try {
         interfaces.webSocket.connect("wss://que.actronair.com.au/api/v0/messaging/aconnect/connect?transport=webSockets&clientProtocol=${state.ProtocolVersion}&user_access_token=${state.userAccessToken}&connectionToken=${encodedConnectionToken}", pingInterval:300)
     } 
@@ -270,11 +270,11 @@ def webSocketStart() {
 	}
 }
 
-def webSocketAbort(connectionToken) {
+def webSocketAbort() {
     logIt("webSocketAbort", "method invoked", "debug")
     logIt("webSocketAbort", "Sending websocket abort request", "debug")
     
-    def encodedConnectionToken = java.net.URLEncoder.encode(connectionToken, "UTF-8")
+    def encodedConnectionToken = java.net.URLEncoder.encode(state.ConnectionToken, "UTF-8")
 
     params = [
         uri : "https://que.actronair.com.au/api/v0/messaging/aconnect/abort?transport=webSockets&clientProtocol=${state.ProtocolVersion}&user_access_token=${state.userAccessToken}&connectionToken=${encodedConnectionToken}"

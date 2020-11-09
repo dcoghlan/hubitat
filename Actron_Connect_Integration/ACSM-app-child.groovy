@@ -25,6 +25,7 @@
  *  Changes:
  *
  *  1.0.0 - 03/11/20 - Initial release.
+ *  1.0.1 - Changed logging level of sendPing() from info to debug
  *
  */
 
@@ -600,7 +601,7 @@ def turnOff() {
 # Send ping to the cloud service to check connectivity
 ******************************************************************************/
 def sendPing() {
-    logIt("sendPing", "Sending ping", "info")
+    logIt("sendPing", "Sending ping", "debug")
 
     def params = getHttpParams("ping")
     logIt("sendPing", "Parameters: ${params}", "debug")
@@ -609,7 +610,7 @@ def sendPing() {
 		httpGet(params) { resp -> 
 			logIt("sendPing", "HTTP request submitted", "debug")
             data = resp.data
-            logIt("sendPing", data, "info")
+            logIt("sendPing", data, "debug")
             
 		}
 	} catch(e) {

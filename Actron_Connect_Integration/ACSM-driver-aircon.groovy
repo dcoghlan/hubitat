@@ -32,6 +32,7 @@
  *  1.0.5 - Modified webSocketConnect & webSocketAbort to use dynamic state variables
  *  1.0.6 - Refactored websocket connect/reconnect logic
  *        - Removed capability TODO items
+ *        - Increase schedule websocketclose timer to "every 3 hours" to reduce load from forced websocket reconnections
  */
 
 metadata {
@@ -264,6 +265,7 @@ def webSocketStart() {
             logIt("webSocketStart", response, "debug")
             if (response.Response == "started") {
                 logIt("webSocketStart", "WebSocket session started successfully", "debug")
+                runEvery3Hours(webSocketClose)
                 // Reset the reconnectDelay to 1 sec since we have a successful connection started.
                 state.wsReconnectDelay = 1
             }

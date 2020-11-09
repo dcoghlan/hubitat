@@ -440,7 +440,7 @@ def webSocketStatus(String message) {
             break
         case "status: closing":
             logIt("webSocketStatus", "${message}", "info")
-            runIn(5, webSocketClose)
+            // runIn(5, webSocketClose) // The websocket is closing anyways, so no need to close it again.
             runIn(30, webSocketOpen)
             break
         case {it.startsWith("failure:")}:

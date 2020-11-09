@@ -30,6 +30,8 @@
  *        - Upon device update, remove state variables no longer used due to dynamic loading
  *        - Modified logging level of websocket logs
  *  1.0.5 - Modified webSocketConnect & webSocketAbort to use dynamic state variables
+ *  1.0.6 - Refactored websocket connect/reconnect logic
+ *        - Removed capability TODO items
  */
 
 metadata {
@@ -39,18 +41,6 @@ metadata {
         capability "TemperatureMeasurement"
         capability "Thermostat"
 
-        // TODO: Look at implementing the following
-        // capability "ThermostatSetpoint"
-        // capability "ThermostatCoolingSetpoint"
-        // capability "ThermostatHeatingSetpoint"
-        // capability "ThermostatOperatingState"
-        // capability "ThermostatSchedule"
-        // capability "ThermostatMode"
-        // capability "ThermostatFanMode"
-        // capability "Initialize" // not sure this is needed
-	    // capability "Sensor" // not sure if this is needed
-
-        
 		// Custom attributes
 		attribute "lastupdate", "date"
         attribute "mode", "number"
@@ -160,19 +150,33 @@ def updated() {
     logIt("updated", "updated...", "info")
     logIt("updated", "debug logging is: ${logEnable == true}", "warn")
     logIt("updated", "description logging is: ${txtEnable == true}", "warn")
+    unschedule()
     if (logEnable) runIn(Long.valueOf(settings?.logEnableTime), logsOff)
     zoneLoggingToggle(settings?.logEnableZones)
     if (settings?.logEnableZones) {
         device.updateSetting("logEnableZones", [value: "false", type: "bool"])
     }
     stateCleanup()
+    initialize()
+    
 }
     
 def initialize() {
+    logIt("initialize", "initialize...", "info")
     // Close any existing websocket connections
-    //webSocketClose()
-    // Start a new websocket connection
-    //webSocketNegotiate()
+    webSocketAbort()
+    webSocketClose()
+    // debounce opening the websocket connection. Because we send both an abort
+    // and a close, if we have an existing websocket connection, we get both a
+    // failure and closing message from the websocket, which automatically
+    // triggers a websocket reconnect, but we cannot be guaranteed to receive
+    // those messages from the websocket, so we set a scheduled task to run in 5
+    // seconds to start the connection again, and if a reconnect is happened to
+    // be triggered from a received websocket failure/closing message, it will
+    // debounced with this schedule, therefore only starting the connection one
+    // time. Without debouncing this here, we get into an endless reconnection
+    // loop.
+    runIn(5, webSocketOpen)
 }
 
 private stateCleanup() {
@@ -260,7 +264,8 @@ def webSocketStart() {
             logIt("webSocketStart", response, "debug")
             if (response.Response == "started") {
                 logIt("webSocketStart", "WebSocket session started successfully", "debug")
-                runEvery1Hour(webSocketClose)
+                // Reset the reconnectDelay to 1 sec since we have a successful connection started.
+                state.wsReconnectDelay = 1
             }
         }
         runEvery10Minutes(webSocketPing)
@@ -448,6 +453,9 @@ void parse(List<Map> description) {
  *
  * ACAC-webSocketStatus(): Websocket status: failure: Connection reset
  * ACAC-webSocketStatus(): Websocket status: status: closing
+ *
+ * Original code for webSocketStatus() and webSocketReconnect() adapted from:
+ * https://github.com/ogiewon/Hubitat/blob/master/Drivers/logitech-harmony-hub-parent.src/logitech-harmony-hub-parent.groovy
  */
 def webSocketStatus(String message) {
     logIt("webSocketStatus", "Status message received - ${message}", "debug")
@@ -457,15 +465,37 @@ def webSocketStatus(String message) {
             break
         case "status: closing":
             logIt("webSocketStatus", "WebSocket connection closing", "warn")
+            runIn(1, webSocketClose)
+            // Debounce calling webSocketReconnect, as sometimes we receive this
+            // closing message and the below failure message in quick
+            // succession, but only sometimes....
+            runIn(3, webSocketReconnect)
             break
         case {it.startsWith("failure:")}:
             logIt("webSocketStatus", "WebSocket failure: ${message}", "warn")
+            // debounce calling webSocketReconnect. See comments about ^^^
+            runIn(3, webSocketReconnect)
             break
         default:
-            logIt("webSocketStatus", "Unhandled status message received: ${message}", "warn")
+            logIt("webSocketStatus", "Unhandled status message received: ${message}", "error")
+            runIn(1, webSocketClose)
+            runIn(3, webSocketReconnect)
             break
         
     }
+}
+
+def webSocketReconnect() {
+    // don't let delay get too crazy, max it out at 10 minutes
+    if(state.wsReconnectDelay > 600) state.wsReconnectDelay = 600
+    
+    logIt("webSocketReconnect", "Scheduling websocket reconnect in ${state.wsReconnectDelay} seconds", "info")
+
+    //If the service is offline or not reachable, give it some time before trying to reconnect
+    runIn(state.wsReconnectDelay, webSocketOpen)
+    
+    // first delay is 2 seconds, doubles every time
+    state.wsReconnectDelay = (state.wsReconnectDelay ?: 1) * 2
 }
 
 /******************************************************************************

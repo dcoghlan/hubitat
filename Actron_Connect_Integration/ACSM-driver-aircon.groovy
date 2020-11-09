@@ -23,6 +23,7 @@
  *  1.0.0 - 03/11/20 - Initial release.
  *  1.0.1 - Fixed issue with rxDelayTime not being set by default which causes
  *          issues with websocket updates being parsed.
+ *  1.0.2 - Added extra options for logEnable times (90Min & 120Min) to help debugging websocket timeouts
  *
  */
 
@@ -66,7 +67,7 @@ metadata {
 preferences {
     section("URIs") {
         input name: "logEnable", type: "bool", description: getPrefDesc("blank"), title: "<b>Enable debug logging</b>", defaultValue: true
-        input name: "logEnableTime", type: "enum", description: getPrefDesc("logEnableTime"), title: "<b>Disable debug logging after</b>", options: [[900:"15min"],[1800:"30min"],[3600:"60min"]], defaultValue: 1800
+        input name: "logEnableTime", type: "enum", description: getPrefDesc("logEnableTime"), title: "<b>Disable debug logging after</b>", options: [[900:"15min"],[1800:"30min"],[3600:"60min"], [5400:"90min"], [7200:"120min"]], defaultValue: 1800
         input name: "logEnableZones", type: "bool", description: getPrefDesc("logEnableZones"), title: "<b>Enable debug logging on zones</b>", defaultValue: settings?.logEnableZones
         input name: "txtEnable", type: "bool", description: getPrefDesc("blank"), title: "<b>Enable descriptionText logging</b>", defaultValue: settings?.txtEnable
         input name: "rxDelayTime", type: "enum", description: getPrefDesc("rxDelayTime"), title: "<b>Set Update Delay Time</b>", options: [[0:"Disabled"],[1000:"1s"],[2000:"2s"],[5000:"5s"],[10000:"10s"]], defaultValue: 2000

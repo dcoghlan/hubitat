@@ -173,7 +173,9 @@ def initialize() {
 /******************************************************************************
  * Websocket Implementation
 ******************************************************************************/
-
+private getDateTimeNow() {
+    return (new Date(now())).format("EEE MMM dd yyyy HH:mm:ss.S z", location.timeZone)
+}
 // wrapper method to open the websocket connection
 def webSocketOpen() {
     webSocketNegotiate()
@@ -242,9 +244,13 @@ def webSocketStart() {
         httpGet(params) { resp -> 
             logIt("webSocketStart", "Response received", "debug")
             def response = resp.data
-            logIt("webSocketStart", response, "info")
+            if (response.Response == "started") {
+                logIt("webSocketStart", "WebSocket session started successfully", "debug")
+                runEvery1Hour(webSocketClose)
+            }
         }
         runEvery10Minutes(webSocketPing)
+        state.wsStartTime = getDateTimeNow()
         
 	} catch(e) {
         logIt("webSocketStart", "HTTP error: ${e}", "error")
@@ -270,6 +276,9 @@ def webSocketAbort(connectionToken) {
         }
         if (status == 200) {
             logIt("webSocketAbort", "Successfully sent websocket abort request.", "info")
+            logIt("webSocketAbort", "Removing connection token", "info")
+            state.remove("ConnectionToken")
+            
         }
 	} catch(e) {
         logIt("webSocketAbort", "Unable to abort websocket. Error: ${e}", "error")
@@ -342,6 +351,7 @@ def parse(String description) {
     }
     if (jsonObject.M) {
         logIt("parse", "Websocket message received ${jsonObject}", "debug")
+        state.wsLastUpdateReceived = getDateTimeNow()
         def msg = jsonObject.M
         def msgDataType = msg[0].D
         switch(msgDataType.toInteger()) {

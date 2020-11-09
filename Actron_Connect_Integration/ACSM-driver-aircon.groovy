@@ -25,7 +25,9 @@
  *          issues with websocket updates being parsed.
  *  1.0.2 - Added extra options for logEnable times (90Min & 120Min) to help debugging websocket timeouts
  *  1.0.3 - Dynamically save all values (except Url) received when negotiating WebSocket connection
- *
+ *  1.0.4 - Once websocket is started, schedule it to close randomly within an hour. This will protect against a "stale" 
+ *          connection where for no reason, we stop receiving websocket messages
+ *        - Upon device update, remove state variables no longer used due to dynamic loading
  */
 
 metadata {
@@ -160,7 +162,8 @@ def updated() {
     zoneLoggingToggle(settings?.logEnableZones)
     if (settings?.logEnableZones) {
         device.updateSetting("logEnableZones", [value: "false", type: "bool"])
-    } 
+    }
+    stateCleanup()
 }
     
 def initialize() {
@@ -168,6 +171,14 @@ def initialize() {
     //webSocketClose()
     // Start a new websocket connection
     //webSocketNegotiate()
+}
+
+private stateCleanup() {
+    state.remove("protocolVersion")
+    state.remove("Url")
+    state.remove("connectionToken")
+    state.remove("connectionId")
+    state.remove("lastUpdateReceived")
 }
 
 /******************************************************************************
@@ -211,7 +222,7 @@ def webSocketNegotiate() {
 	} catch(e) {
         logIt("webSocketNegotiate", "HTTP error: ${e}", "error")
 	}
-    webSocketConnect(state.connectionToken)
+    webSocketConnect(state.ConnectionToken)
 }
 
 def webSocketConnect(connectionToken) {
@@ -220,7 +231,7 @@ def webSocketConnect(connectionToken) {
     
     def encodedConnectionToken = java.net.URLEncoder.encode(connectionToken, "UTF-8")
     try {
-        interfaces.webSocket.connect("wss://que.actronair.com.au/api/v0/messaging/aconnect/connect?transport=webSockets&clientProtocol=${state.protocolVersion}&user_access_token=${state.userAccessToken}&connectionToken=${encodedConnectionToken}", pingInterval:300)
+        interfaces.webSocket.connect("wss://que.actronair.com.au/api/v0/messaging/aconnect/connect?transport=webSockets&clientProtocol=${state.ProtocolVersion}&user_access_token=${state.userAccessToken}&connectionToken=${encodedConnectionToken}", pingInterval:300)
     } 
     catch(e) {
         logIt("webSocketConnect", "initialize error: ${e.message}", "debug")
@@ -232,11 +243,10 @@ def webSocketConnect(connectionToken) {
 def webSocketStart() {
     logIt("webSocketStart", "method invoked", "debug")
     pauseExecution(1000)
-    logIt("webSocketStart", "Sending start request", "info")
-    def encodedConnectionToken = java.net.URLEncoder.encode(state.connectionToken, "UTF-8")
+    def encodedConnectionToken = java.net.URLEncoder.encode(state.ConnectionToken, "UTF-8")
 
     params = [
-        uri : "https://que.actronair.com.au/api/v0/messaging/aconnect/start?transport=webSockets&clientProtocol=${state.protocolVersion}&user_access_token=${state.userAccessToken}&connectionToken=${encodedConnectionToken}",
+        uri : "https://que.actronair.com.au/api/v0/messaging/aconnect/start?transport=webSockets&clientProtocol=${state.ProtocolVersion}&user_access_token=${state.userAccessToken}&connectionToken=${encodedConnectionToken}",
 	]
     logIt("webSocketStart", "Parameters: ${params}", "debug")
     
@@ -264,7 +274,7 @@ def webSocketAbort(connectionToken) {
     def encodedConnectionToken = java.net.URLEncoder.encode(connectionToken, "UTF-8")
 
     params = [
-        uri : "https://que.actronair.com.au/api/v0/messaging/aconnect/abort?transport=webSockets&clientProtocol=${state.protocolVersion}&user_access_token=${state.userAccessToken}&connectionToken=${encodedConnectionToken}"
+        uri : "https://que.actronair.com.au/api/v0/messaging/aconnect/abort?transport=webSockets&clientProtocol=${state.ProtocolVersion}&user_access_token=${state.userAccessToken}&connectionToken=${encodedConnectionToken}"
 	]
 
     logIt("webSocketAbort", "${params}", "debug")
@@ -288,9 +298,9 @@ def webSocketAbort(connectionToken) {
 def webSocketClose() {
     logIt("webSocketClose", "method invoked", "debug")
 
-    if (state.connectionToken) {
+    if (state.ConnectionToken) {
         logIt("webSocketClose", "Found existing connectionToken. Initiating websocket abort request.", "info")
-        webSocketAbort(state.connectionToken)
+        webSocketAbort(state.ConnectionToken)
     }
     
     // Close the connection from the hubitat side
@@ -304,9 +314,9 @@ def webSocketClose() {
     }
     
     // cleanup the connection token
-    state.connectionToken = ""
-    state.connectionId = ""
-    state.protocolVersion = ""
+    state.ConnectionToken = ""
+    state.ConnectionId = ""
+    state.ProtocolVersion = ""
                                    
 }
 

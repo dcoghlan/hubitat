@@ -290,8 +290,6 @@ def webSocketAbort() {
         }
         if (status == 200) {
             logIt("webSocketAbort", "Successfully sent websocket abort request.", "info")
-            logIt("webSocketAbort", "Removing connection token", "info")
-            state.remove("ConnectionToken")
             
         }
 	} catch(e) {
@@ -302,11 +300,6 @@ def webSocketAbort() {
 def webSocketClose() {
     logIt("webSocketClose", "method invoked", "debug")
 
-    if (state.ConnectionToken) {
-        logIt("webSocketClose", "Found existing connectionToken. Initiating websocket abort request.", "info")
-        webSocketAbort(state.ConnectionToken)
-    }
-    
     // Close the connection from the hubitat side
     try {
         interfaces.webSocket.close()
@@ -316,12 +309,6 @@ def webSocketClose() {
         logIt("webSocketClose", "close websocket error: ${e.message}", "error")
         logIt("webSocketClose", "WebSocket close failed", "error")
     }
-    
-    // cleanup the connection token
-    state.ConnectionToken = ""
-    state.ConnectionId = ""
-    state.ProtocolVersion = ""
-                                   
 }
 
 // Not really used

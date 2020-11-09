@@ -28,6 +28,7 @@
  *  1.0.4 - Once websocket is started, schedule it to close randomly within an hour. This will protect against a "stale" 
  *          connection where for no reason, we stop receiving websocket messages
  *        - Upon device update, remove state variables no longer used due to dynamic loading
+ *        - Modified logging level of websocket logs
  */
 
 metadata {
@@ -194,7 +195,7 @@ def webSocketOpen() {
 
 def webSocketNegotiate() {
     logIt("webSocketNegotiate", "method invoked", "debug")
-    logIt("webSocketNegotiate", "Starting negotioation for websocket connection", "info")
+    logIt("webSocketNegotiate", "Starting negotioation for websocket connection", "debug")
     
     params = [
         uri : "https://que.actronair.com.au/api/v0/messaging/aconnect/negotiate?clientProtocol=1.5&user_access_token=${state.userAccessToken}",
@@ -227,7 +228,7 @@ def webSocketNegotiate() {
 
 def webSocketConnect(connectionToken) {
     logIt("webSocketConnect", "method invoked", "debug")
-    logIt("webSocketConnect", "Opening websocket connection", "info")
+    logIt("webSocketConnect", "Opening websocket connection", "debug")
     
     def encodedConnectionToken = java.net.URLEncoder.encode(connectionToken, "UTF-8")
     try {
@@ -243,6 +244,7 @@ def webSocketConnect(connectionToken) {
 def webSocketStart() {
     logIt("webSocketStart", "method invoked", "debug")
     pauseExecution(1000)
+    logIt("webSocketStart", "Sending start request", "debug")
     def encodedConnectionToken = java.net.URLEncoder.encode(state.ConnectionToken, "UTF-8")
 
     params = [
@@ -254,6 +256,7 @@ def webSocketStart() {
         httpGet(params) { resp -> 
             logIt("webSocketStart", "Response received", "debug")
             def response = resp.data
+            logIt("webSocketStart", response, "debug")
             if (response.Response == "started") {
                 logIt("webSocketStart", "WebSocket session started successfully", "debug")
                 runEvery1Hour(webSocketClose)
@@ -269,7 +272,7 @@ def webSocketStart() {
 
 def webSocketAbort(connectionToken) {
     logIt("webSocketAbort", "method invoked", "debug")
-    logIt("webSocketAbort", "Sending websocket abort request", "info")
+    logIt("webSocketAbort", "Sending websocket abort request", "debug")
     
     def encodedConnectionToken = java.net.URLEncoder.encode(connectionToken, "UTF-8")
 
@@ -277,7 +280,7 @@ def webSocketAbort(connectionToken) {
         uri : "https://que.actronair.com.au/api/v0/messaging/aconnect/abort?transport=webSockets&clientProtocol=${state.ProtocolVersion}&user_access_token=${state.userAccessToken}&connectionToken=${encodedConnectionToken}"
 	]
 
-    logIt("webSocketAbort", "${params}", "debug")
+    logIt("webSocketAbort", "params - ${params}", "debug")
     
     try {
         httpPost(params) { resp -> 
@@ -306,7 +309,7 @@ def webSocketClose() {
     // Close the connection from the hubitat side
     try {
         interfaces.webSocket.close()
-        logIt("webSocketClose", "Gracefully closing Hubitat websocket connection", "info")
+        logIt("webSocketClose", "Gracefully closing Hubitat websocket connection", "debug")
     }
     catch(e) {
         logIt("webSocketClose", "close websocket error: ${e.message}", "error")
@@ -459,23 +462,19 @@ void parse(List<Map> description) {
  * ACAC-webSocketStatus(): Websocket status: status: closing
  */
 def webSocketStatus(String message) {
+    logIt("webSocketStatus", "Status message received - ${message}", "debug")
     switch (message) {
         case "status: open":
             logIt("webSocketStatus", "Actron Connect WebSocket connection established.", "info")
             break
         case "status: closing":
-            logIt("webSocketStatus", "${message}", "info")
-            // runIn(5, webSocketClose) // The websocket is closing anyways, so no need to close it again.
-            runIn(30, webSocketOpen)
+            logIt("webSocketStatus", "WebSocket connection closing", "warn")
             break
         case {it.startsWith("failure:")}:
-            logIt("webSocketStatus", "${message}", "error")
-            runIn(5, webSocketClose)
-            logIt("webSocketStatus", "Scheduling websocket reconnect in 30 seconds", "info")
-            runIn(30, webSocketOpen)
+            logIt("webSocketStatus", "WebSocket failure: ${message}", "warn")
             break
         default:
-            logIt("webSocketStatus", "Unhandled status message received: ${message}", "info")
+            logIt("webSocketStatus", "Unhandled status message received: ${message}", "warn")
             break
         
     }

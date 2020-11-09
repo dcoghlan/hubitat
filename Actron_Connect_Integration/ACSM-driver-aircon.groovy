@@ -24,6 +24,7 @@
  *  1.0.1 - Fixed issue with rxDelayTime not being set by default which causes
  *          issues with websocket updates being parsed.
  *  1.0.2 - Added extra options for logEnable times (90Min & 120Min) to help debugging websocket timeouts
+ *  1.0.3 - Dynamically save all values (except Url) received when negotiating WebSocket connection
  *
  */
 
@@ -196,9 +197,13 @@ def webSocketNegotiate() {
             logIt("webSocketNegotiate", "Response received", "debug")
             def response = resp.data
             logIt("webSocketNegotiate", "Data: ${response}", "debug")
-            state.connectionToken = resp.data.ConnectionToken
-            state.connectionId = resp.data.ConnectionId
-            state.protocolVersion = resp.data.ProtocolVersion
+            data = resp.data
+            data.each {
+                if (it.key != "Url") {
+                    logIt("webSocketNegotiate", "Updating state: ${it.key} = ${it.value}", "debug")
+                    state."${it.key}" = it.value
+                }
+            }
         }
                
 	} catch(e) {

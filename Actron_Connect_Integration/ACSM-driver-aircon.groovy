@@ -29,6 +29,7 @@
  *          connection where for no reason, we stop receiving websocket messages
  *        - Upon device update, remove state variables no longer used due to dynamic loading
  *        - Modified logging level of websocket logs
+ *  1.0.5 - Modified webSocketConnect & webSocketAbort to use dynamic state variables
  */
 
 metadata {

@@ -239,6 +239,7 @@ def webSocketStart() {
             def response = resp.data
             logIt("webSocketStart", response, "info")
         }
+        runEvery10Minutes(webSocketPing)
         
 	} catch(e) {
         logIt("webSocketStart", "HTTP error: ${e}", "error")

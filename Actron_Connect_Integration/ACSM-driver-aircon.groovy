@@ -33,6 +33,7 @@
  *  1.0.6 - Refactored websocket connect/reconnect logic
  *        - Removed capability TODO items
  *        - Increase schedule websocketclose timer to "every 3 hours" to reduce load from forced websocket reconnections
+ *  1.0.7 - Fixed issue where upon installation, the websocket connection wasn't automatically started.
  */
 
 metadata {
@@ -145,6 +146,7 @@ void installed() {
     logIt("installed", "device was installed", "info")
     if (logEnable) runIn(Long.valueOf(settings?.logEnableTime), logsOff)
     createChildDevices()
+    webSocketOpen()
 }
 
 def updated() {

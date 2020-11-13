@@ -26,6 +26,7 @@
  *
  *  1.0.0 - 03/11/20 - Initial release.
  *  1.0.1 - Changed logging level of sendPing() from info to debug
+ *  1.0.2 - Added updateSettingsAPI method to allow sending setting changes via API
  *
  */
 
@@ -618,4 +619,25 @@ def sendPing() {
 	}
     
     return data
+}
+
+/******************************************************************************
+# Update settings of air conditioner
+#
+# Although it seems possible to send just the relevant entries for what you want
+# to do, sending all attributes mimics the offical Actron App, so hopefully it 
+# will prevent funny stuff from happenning.
+******************************************************************************/
+
+def updateSettingsAPI(Map data) {
+    logIt("updateSettingsAPI", data, "debug") 
+    def builder = new groovy.json.JsonBuilder()
+    def root = builder.DA {
+        amOn data['amOn']
+        tempTarget data['tempTarget']
+        fanSpeed data['fanSpeed']
+        mode data['mode']
+    }
+    logIt("updateSettingsAPI", "JSON Body: ${builder.toString()}", "debug") 
+    updateAPI(["jsonBody": builder.toString(), "type": "Settings"])
 }

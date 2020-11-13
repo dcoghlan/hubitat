@@ -183,6 +183,7 @@ def initialize() {
     // time. Without debouncing this here, we get into an endless reconnection
     // loop.
     runIn(5, webSocketOpen)
+    sendEvent(name: 'supportedThermostatModes', value: ["Auto", "Heat", "Cool", "Fan Only", "Off"],  isStateChange: false, displayed: true)
 }
 
 private stateCleanup() {

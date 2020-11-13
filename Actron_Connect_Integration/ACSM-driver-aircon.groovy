@@ -34,6 +34,9 @@
  *        - Removed capability TODO items
  *        - Increase schedule websocketclose timer to "every 3 hours" to reduce load from forced websocket reconnections
  *  1.0.7 - Fixed issue where upon installation, the websocket connection wasn't automatically started.
+ *  1.0.8 - Changed scheduled websocketclose to occur 55 mins after the connection is started, due to issue seen where 
+ *          no updates were being received after a period of time. The exact time after which message stop being sent by 
+ *          the server is unknown, but its always occurs sometime after 1 hour after the connection was started.
  */
 
 metadata {
@@ -267,7 +270,7 @@ def webSocketStart() {
             logIt("webSocketStart", response, "debug")
             if (response.Response == "started") {
                 logIt("webSocketStart", "WebSocket session started successfully", "debug")
-                runEvery3Hours(webSocketClose)
+                runIn(3300, webSocketClose)
                 // Reset the reconnectDelay to 1 sec since we have a successful connection started.
                 state.wsReconnectDelay = 1
             }
@@ -519,18 +522,35 @@ def getIsOnLabelMap() {
 	]
 }
 
-def getModeMap() {
+def getModeMapToHe() {
     return [
         "0" : "auto",
         "1" : "heat",
         "2" : "cool",
-        "3" : "heat",
+        "3" : "Fan Only"
 	]
     //0 = Auto
     //1 = Heat
     //2 = Cool
     //3 = FanOnly
     // "auto", "off", "heat", "emergency heat", "cool"
+}
+
+def getModeMapFromHe() {
+    return [
+        "Auto" : 0,
+        "Heat" : 1,
+        "Cool" : 2,
+        "Fan Only" : 3
+    ]
+}
+
+def getCompressorActivityMapToHe() {
+    return [
+        "0" : "heating",
+        "1" : "cooling",
+        "2" : "idle"
+    ]
 }
 
 def reportedTemp(data) {
@@ -690,16 +710,21 @@ def updateCurrentState(data) {
     def isOnMap = getIsOnLabelMap()
     
     // mode mapping
-    def modeMap = getModeMap()
+    def modeMap = getModeMapToHe()
+    
+    // compressor activity mapping
+    def compressorActivityMap = getCompressorActivityMapToHe()
     
     logIt("updateCurrentState", "Updating from current state data: ${data.jsonState}", "debug")
 
     def switchValueNew = isOnMap[String.valueOf(data.jsonState.isOn)]
     def modeValueNew = modeMap[String.valueOf(data.jsonState.mode)]
+    def operatingModeValueNew = compressorActivityMap[String.valueOf(data.jsonState.compressorActivity)]
     device.sendEvent(name: "switch", value: switchValueNew, descriptionText: "${device.getName()} was turned ${switchValueNew}")
     device.sendEvent(name: "temperature", value: data.jsonState.get("roomTemp_oC"), descriptionText: "${device.getName()} temperature is now ${data.jsonState.get("roomTemp_oC")}")
     device.sendEvent(name: "thermostatSetpoint", value: data.jsonState.get("setPoint"), descriptionText: "${device.getName()} thermostatSetpoint is now ${data.jsonState.get("setPoint")}")
     device.sendEvent(name: "thermostatMode", value: modeValueNew, descriptionText: "${device.getName()} thermostatMode is now ${modeValueNew}")
+    device.sendEvent(name: "thermostatOperatingState", value: operatingModeValueNew, descriptionText: "${device.getName()} thermostatOperatingState is now ${modeValueNew}")
     
     def updateItems = ["mode", "fanSpeed", "setPoint", "roomTemp_oC", "isInESP_Mode", "fanIsCont", "compressorActivity", "errorCode"]
     updateItems.each {
@@ -770,6 +795,29 @@ def updateZonesTemp(data) {
 
 def setHeatingSetpoint(num) {
     logIt("setHeatingSetpoint", "${num}", "info")
+}
+
+def setThermostatMode(String mode) {
+    logIt("setThermostatMode", "Request to set thermostat mode to: ${mode}", "debug")
+
+    device.sendEvent(name: "thermostatMode", value: mode, descriptionText: "${device.getName()} thermostatMode is now ${mode}")
+    updateThermostatMode(mode)
+}
+
+def updateThermostatMode(String mode) {
+    if (mode == "off") {
+        off()
+    } 
+    else {
+        state.rxDelay = "True"
+        if (device.currentValue('switch') != "on") {
+            on()
+        }
+        def modeMap = getModeMapFromHe()
+        def modeValue = modeMap[String.valueOf(mode)]
+        logIt("updateThermostatMode", "Updating API with mode: ${modeValue}", "debug")
+        parent?.updateSettingsAPI([amOn: true, tempTarget: device.currentValue('thermostatSetpoint'), fanSpeed: device.currentValue('fanSpeed'), mode: modeValue])
+    }
 }
 
 //*****************************************************************************

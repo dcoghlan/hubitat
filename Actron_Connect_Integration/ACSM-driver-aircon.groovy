@@ -37,6 +37,8 @@
  *  1.0.8 - Changed scheduled websocketclose to occur 55 mins after the connection is started, due to issue seen where 
  *          no updates were being received after a period of time. The exact time after which message stop being sent by 
  *          the server is unknown, but its always occurs sometime after 1 hour after the connection was started.
+ *  1.0.9 - Added supported thermostat modes and fan modes. For the modes to be updated, on an existing device, just 
+ *          need to modify one of the preferences, which will update the modes.
  */
 
 metadata {
@@ -56,6 +58,7 @@ metadata {
         attribute "roomTemp_oC", "number"
         attribute "errorCode", "number"
         attribute "fanIsCont", "number"
+        attribute "isOn", "enum", ["true","false"] // setting this to an enum allows booleans
 		
 		command "poll"
         command "webSocketClose"
@@ -149,6 +152,7 @@ void installed() {
     logIt("installed", "device was installed", "info")
     if (logEnable) runIn(Long.valueOf(settings?.logEnableTime), logsOff)
     createChildDevices()
+    setSupportedThermostsatDetails()
     webSocketOpen()
 }
 
@@ -183,7 +187,12 @@ def initialize() {
     // time. Without debouncing this here, we get into an endless reconnection
     // loop.
     runIn(5, webSocketOpen)
+    setSupportedThermostsatDetails()
+}
+
+private setSupportedThermostsatDetails() {
     sendEvent(name: 'supportedThermostatModes', value: ["Auto", "Heat", "Cool", "Fan Only", "Off"],  isStateChange: false, displayed: true)
+    sendEvent(name: 'supportedThermostatFanModes', value: ["Low", "Med", "High"],  isStateChange: false, displayed: true)
 }
 
 private stateCleanup() {
@@ -537,6 +546,22 @@ def getModeMapToHe() {
     // "auto", "off", "heat", "emergency heat", "cool"
 }
 
+def getFanModeMapFromHe() {
+    return [
+        "Low"  : 0,
+        "Med"  : 1,
+        "High" : 2
+    ] 
+}
+
+def getFanModeMapToHe() {
+    return [
+        0 : "Low",
+        1 : "Med",
+        2 : "High"
+    ] 
+}
+
 def getModeMapFromHe() {
     return [
         "Auto" : 0,
@@ -601,6 +626,7 @@ def off() {
     state.rxDelay = "True"
     logIt("off", "${device.getDeviceNetworkId()}(${device.getDisplayName()}): method invoked", "debug")
     parse([[name:"switch", value:"off", descriptionText:"${device.getDeviceNetworkId()}(${device.getDisplayName()}) was turned off"]])
+    parse([[name:"thermostatMode", value:"Off"]])
     parent.turnOff()
 }
 
@@ -712,6 +738,9 @@ def updateCurrentState(data) {
     
     // mode mapping
     def modeMap = getModeMapToHe()
+
+    // fanSpeed mapping
+    def fanModeMap = getFanModeMapToHe()
     
     // compressor activity mapping
     def compressorActivityMap = getCompressorActivityMapToHe()
@@ -719,15 +748,25 @@ def updateCurrentState(data) {
     logIt("updateCurrentState", "Updating from current state data: ${data.jsonState}", "debug")
 
     def switchValueNew = isOnMap[String.valueOf(data.jsonState.isOn)]
-    def modeValueNew = modeMap[String.valueOf(data.jsonState.mode)]
+    def fanModeValueNew = fanModeMap[data.jsonState.fanSpeed]
     def operatingModeValueNew = compressorActivityMap[String.valueOf(data.jsonState.compressorActivity)]
     device.sendEvent(name: "switch", value: switchValueNew, descriptionText: "${device.getName()} was turned ${switchValueNew}")
     device.sendEvent(name: "temperature", value: data.jsonState.get("roomTemp_oC"), descriptionText: "${device.getName()} temperature is now ${data.jsonState.get("roomTemp_oC")}")
     device.sendEvent(name: "thermostatSetpoint", value: data.jsonState.get("setPoint"), descriptionText: "${device.getName()} thermostatSetpoint is now ${data.jsonState.get("setPoint")}")
-    device.sendEvent(name: "thermostatMode", value: modeValueNew, descriptionText: "${device.getName()} thermostatMode is now ${modeValueNew}")
-    device.sendEvent(name: "thermostatOperatingState", value: operatingModeValueNew, descriptionText: "${device.getName()} thermostatOperatingState is now ${modeValueNew}")
+    device.sendEvent(name: "thermostatFanMode", value: fanModeValueNew, descriptionText: "${device.getName()} thermostatFanMode is now ${fanModeValueNew}")
+    device.sendEvent(name: "thermostatOperatingState", value: operatingModeValueNew, descriptionText: "${device.getName()} thermostatOperatingState is now ${operatingModeValueNew}")
     
-    def updateItems = ["mode", "fanSpeed", "setPoint", "roomTemp_oC", "isInESP_Mode", "fanIsCont", "compressorActivity", "errorCode"]
+    // Need to set the thermostat mode to Off, but its not one of the modes received in the updates    
+    if (data.jsonState.isOn == false) {
+        device.sendEvent(name: "thermostatMode", value: "Off", descriptionText: "${device.getName()} thermostatMode is now Off")
+    }
+    else {
+        def modeValueNew = modeMap[String.valueOf(data.jsonState.mode)]
+        device.sendEvent(name: "thermostatMode", value: modeValueNew, descriptionText: "${device.getName()} thermostatMode is now ${modeValueNew}")
+    }
+
+    
+    def updateItems = ["isOn", "mode", "fanSpeed", "setPoint", "roomTemp_oC", "isInESP_Mode", "fanIsCont", "compressorActivity", "errorCode"]
     updateItems.each {
         device.sendEvent(name: it, value: data.jsonState.get(it), descriptionText:"${it} is now ${data.jsonState.get(it)}")
     }
@@ -801,12 +840,12 @@ def setHeatingSetpoint(num) {
 def setThermostatMode(String mode) {
     logIt("setThermostatMode", "Request to set thermostat mode to: ${mode}", "debug")
 
-    device.sendEvent(name: "thermostatMode", value: mode, descriptionText: "${device.getName()} thermostatMode is now ${mode}")
+    device.sendEvent(name: "thermostatMode", value: mode, descriptionText: "${device.getName()} thermostatMode is set to ${mode}")
     updateThermostatMode(mode)
 }
 
 def updateThermostatMode(String mode) {
-    if (mode == "off") {
+    if (mode == "Off") {
         off()
     } 
     else {
@@ -819,6 +858,23 @@ def updateThermostatMode(String mode) {
         logIt("updateThermostatMode", "Updating API with mode: ${modeValue}", "debug")
         parent?.updateSettingsAPI([amOn: true, tempTarget: device.currentValue('thermostatSetpoint'), fanSpeed: device.currentValue('fanSpeed'), mode: modeValue])
     }
+}
+
+def setThermostatFanMode(String mode) {
+    logIt("setThermostatFanMode", "Request to set thermostat fan mode to: ${mode}", "debug")
+
+    device.sendEvent(name: "thermostatFanMode", value: mode, descriptionText: "${device.getName()} thermostatFanMode is now ${mode}")
+    updateThermostatFanMode(mode)
+}
+
+def updateThermostatFanMode(String fanMode) {
+    logIt("updateThermostatFanMode", "Received request to update API fan mode to: ${fanMode}", "debug")
+    state.rxDelay = "True"
+    def fanModeMap = getFanModeMapFromHe()
+    def fanModeValue = fanModeMap[fanMode.trim()]
+    logIt("updateThermostatFanMode", "Updating API with fan mode: ${fanModeValue}", "debug")
+    parent?.updateSettingsAPI([amOn: device.currentValue('isOn').toBoolean(), tempTarget: device.currentValue('thermostatSetpoint'), fanSpeed: fanModeValue.toInteger(), mode: device.currentValue('mode')])
+
 }
 
 //*****************************************************************************

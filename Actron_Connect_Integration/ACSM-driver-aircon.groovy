@@ -44,12 +44,12 @@
 metadata {
     definition(name: "Actron Connect AirConditioner", namespace: "dcoghlan", author: "Dale Coghlan") {
 
-	    capability "Switch"
+        capability "Switch"
         capability "TemperatureMeasurement"
         capability "Thermostat"
 
-		// Custom attributes
-		attribute "lastupdate", "date"
+        // Custom attributes
+        attribute "lastupdate", "date"
         attribute "mode", "number"
         attribute "fanSpeed", "number"
         attribute "setPoint", "number"  // TODO: Verify if this is handled by capbility/ThermostatSetpoint and implement if needed
@@ -60,7 +60,7 @@ metadata {
         attribute "fanIsCont", "number"
         attribute "isOn", "enum", ["true","false"] // setting this to an enum allows booleans
 		
-		command "poll"
+        command "poll"
         command "webSocketClose"
         command "webSocketOpen"
         command "webSocketPing"

@@ -39,6 +39,8 @@
  *          the server is unknown, but its always occurs sometime after 1 hour after the connection was started.
  *  1.0.9 - Added supported thermostat modes and fan modes. For the modes to be updated, on an existing device, just 
  *          need to modify one of the preferences, which will update the modes.
+ *  1.0.10 - Stopped debug logs which show user_access_token
+ *
  */
 
 metadata {
@@ -225,8 +227,6 @@ def webSocketNegotiate() {
         body: jsonBody
 	]
 
-    logIt("webSocketNegotiate", "Parameters: ${params}", "debug")
-    
     try {
         httpGet(params) { resp -> 
             logIt("webSocketNegotiate", "Response received", "debug")
@@ -271,7 +271,6 @@ def webSocketStart() {
     params = [
         uri : "https://que.actronair.com.au/api/v0/messaging/aconnect/start?transport=webSockets&clientProtocol=${state.ProtocolVersion}&user_access_token=${state.userAccessToken}&connectionToken=${encodedConnectionToken}",
 	]
-    logIt("webSocketStart", "Parameters: ${params}", "debug")
     
     try {
         httpGet(params) { resp -> 
@@ -302,8 +301,6 @@ def webSocketAbort() {
     params = [
         uri : "https://que.actronair.com.au/api/v0/messaging/aconnect/abort?transport=webSockets&clientProtocol=${state.ProtocolVersion}&user_access_token=${state.userAccessToken}&connectionToken=${encodedConnectionToken}"
 	]
-
-    logIt("webSocketAbort", "params - ${params}", "debug")
     
     try {
         httpPost(params) { resp -> 

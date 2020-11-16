@@ -27,7 +27,7 @@
  *  1.0.0 - 03/11/20 - Initial release.
  *  1.0.1 - Changed logging level of sendPing() from info to debug
  *  1.0.2 - Added updateSettingsAPI method to allow sending setting changes via API
- *
+ *  1.0.3 - Stopped debug logs which show user_access_token
  */
 
 import groovy.transform.Field
@@ -318,10 +318,10 @@ def getHttpParams(String type) {
 
 def getDevice(String type = "All") {
 
-    logIt("getDevice", "Using ${state.userAccessToken} to retrive devices from cloud", "debug")
+    //logIt("getDevice", "Using ${state.userAccessToken} to retrive devices from cloud", "debug")
 
     def params = getHttpParams(type)
-    logIt("getDevice", "Parameters: ${params}", "debug")
+    //logIt("getDevice", "Parameters: ${params}", "debug")
 	
 	try {
 		httpGet(params) { resp -> 
@@ -540,7 +540,7 @@ def updateAPI(data) {
         contentType: 'application/json',
         body: data.jsonBody
 	]
-    logIt("updateAPI", params, "debug")
+    //logIt("updateAPI", params, "debug")
     try {
         httpPut(params) { resp -> 
             logIt("updateAPI", "HTTP PUT request submitted", "debug")
@@ -605,7 +605,7 @@ def sendPing() {
     logIt("sendPing", "Sending ping", "debug")
 
     def params = getHttpParams("ping")
-    logIt("sendPing", "Parameters: ${params}", "debug")
+    //logIt("sendPing", "Parameters: ${params}", "debug")
 	
 	try {
 		httpGet(params) { resp -> 

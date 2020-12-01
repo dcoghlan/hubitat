@@ -40,6 +40,10 @@
  *  1.0.9 - Added supported thermostat modes and fan modes. For the modes to be updated, on an existing device, just 
  *          need to modify one of the preferences, which will update the modes.
  *  1.0.10 - Stopped debug logs which show user_access_token
+ *  1.0.11 - Tidied up attributes
+ *         - Driver now sets coolingSetPoint and heatingSetPoint to be the same as the thermostatSetpoint when an state
+ *           update is received via the websocket. This fixes the issue where the thermostat tile on the dashboard was
+ *           showing unknown between the 2 arrows. 
  *
  */
 
@@ -50,19 +54,22 @@ metadata {
         capability "TemperatureMeasurement"
         capability "Thermostat"
 
-        // Custom attributes
-        attribute "lastupdate", "date"
+        // Custom attributes received from Actron Connect
         attribute "mode", "number"
         attribute "fanSpeed", "number"
-        attribute "setPoint", "number"  // TODO: Verify if this is handled by capbility/ThermostatSetpoint and implement if needed
+        attribute "setPoint", "number"
         attribute "compressorActivity", "number"
         attribute "isInESP_Mode", "string"
         attribute "roomTemp_oC", "number"
-        attribute "errorCode", "number"
+        attribute "errorCode", "string"
         attribute "fanIsCont", "number"
+        
+		// Custom attributes
+		attribute "lastupdate", "date"
         attribute "isOn", "enum", ["true","false"] // setting this to an enum allows booleans
-		
-        command "poll"
+
+        // Custom commands
+		command "poll"
         command "webSocketClose"
         command "webSocketOpen"
         command "webSocketPing"
@@ -750,6 +757,8 @@ def updateCurrentState(data) {
     device.sendEvent(name: "switch", value: switchValueNew, descriptionText: "${device.getName()} was turned ${switchValueNew}")
     device.sendEvent(name: "temperature", value: data.jsonState.get("roomTemp_oC"), descriptionText: "${device.getName()} temperature is now ${data.jsonState.get("roomTemp_oC")}")
     device.sendEvent(name: "thermostatSetpoint", value: data.jsonState.get("setPoint"), descriptionText: "${device.getName()} thermostatSetpoint is now ${data.jsonState.get("setPoint")}")
+    device.sendEvent(name: "coolingSetpoint", value: data.jsonState.get("setPoint"), descriptionText: "${device.getName()} coolingSetpoint is now ${data.jsonState.get("setPoint")}")
+    device.sendEvent(name: "heatingSetpoint", value: data.jsonState.get("setPoint"), descriptionText: "${device.getName()} heatingSetpoint is now ${data.jsonState.get("setPoint")}")
     device.sendEvent(name: "thermostatFanMode", value: fanModeValueNew, descriptionText: "${device.getName()} thermostatFanMode is now ${fanModeValueNew}")
     device.sendEvent(name: "thermostatOperatingState", value: operatingModeValueNew, descriptionText: "${device.getName()} thermostatOperatingState is now ${operatingModeValueNew}")
     

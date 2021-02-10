@@ -33,7 +33,7 @@
             "namespace": "dcoghlan",
             "location": "https://raw.githubusercontent.com/dcoghlan/hubitat/main/Actron_Connect_Integration/ACSM-driver-aircon.groovy",
             "required": true,
-            "version": "1.0.11"
+            "version": "1.0.12"
         },
         {
             "id": "69daac36-1969-4429-b93e-98db810a51d1",

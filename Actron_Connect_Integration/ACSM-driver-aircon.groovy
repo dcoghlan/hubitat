@@ -20,7 +20,7 @@
  *
  *  Changes:
  *
- *  1.0.0 - 03/11/20 - Initial release.
+ *  1.0.0 - 2020-11-03 - Initial release.
  *  1.0.1 - Fixed issue with rxDelayTime not being set by default which causes
  *          issues with websocket updates being parsed.
  *  1.0.2 - Added extra options for logEnable times (90Min & 120Min) to help debugging websocket timeouts
@@ -44,6 +44,8 @@
  *         - Driver now sets coolingSetPoint and heatingSetPoint to be the same as the thermostatSetpoint when an state
  *           update is received via the websocket. This fixes the issue where the thermostat tile on the dashboard was
  *           showing unknown between the 2 arrows. 
+ *  1.0.12 - 2021-02-10 - When using the "Hubitat Dashboard - Android dashboard app" community app, trying to change the
+ *           thermostat mode to "off" wouldn't actually turn the device off. This has been resolved.
  *
  */
 
@@ -851,7 +853,7 @@ def setThermostatMode(String mode) {
 }
 
 def updateThermostatMode(String mode) {
-    if (mode == "Off") {
+    if (mode.toLowerCase() == "off") {
         off()
     } 
     else {

@@ -46,6 +46,8 @@
  *           showing unknown between the 2 arrows. 
  *  1.0.12 - 2021-02-10 - When using the "Hubitat Dashboard - Android dashboard app" community app, trying to change the
  *           thermostat mode to "off" wouldn't actually turn the device off. This has been resolved.
+ *  1.0.13 - 2021-05-15 - Added initalize capability so that after a reboot the websocket connection is automatically
+ *           started.
  *
  */
 
@@ -55,6 +57,7 @@ metadata {
         capability "Switch"
         capability "TemperatureMeasurement"
         capability "Thermostat"
+        capability "Initialize"
 
         // Custom attributes received from Actron Connect
         attribute "mode", "number"

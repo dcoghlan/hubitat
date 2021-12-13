@@ -13,6 +13,19 @@
         "Temperature & Humidity",
         "Climate Control"
       ]
+    },
+    {
+      "id": "fb03de9f-209a-4e8c-a689-a43c3c9981fb",
+      "name": "Motion2Contact",
+      "category": "Convenience",
+      "location": "https://raw.githubusercontent.com/dcoghlan/hubitat/main/Motion2Contact/packageManifest.json",
+      "description": "Mirrors a motion sensor to a contact sensor",
+      "tags": [
+        "Alarm Systems",
+        "Monitoring",
+        "Motion Control",
+        "Multi Sensors"
+      ]
     }
   ]
 }

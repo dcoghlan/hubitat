@@ -1,0 +1,31 @@
+{
+    "packageName": "Motion2Contact",
+    "author": "Dale Coghlan",
+    "minimumHEVersion": "2.2.8",
+    "dateReleased": "2021-12-14",
+    "documentationLink": "https://github.com/dcoghlan/hubitat/tree/main/Motion2Contact",
+    "releaseNotes": "Motion2Contact - 1.0.0: Initial Release\nMotion2Contact Child - 1.0.0: Initial Release",
+    "apps": [
+        {
+            "id": "27398959-6333-4dc8-ac4f-0cf0513bfca0",
+            "name": "Motion2Contact",
+            "namespace": "dcoghlan",
+            "location": "https://raw.githubusercontent.com/dcoghlan/hubitat/main/Motion2Contact/motion2contact-app-parent.groovy",
+            "required": true,
+            "oauth": false,
+            "version": "1.0.0",
+            "primary": true
+        },
+        {
+            "id": "708923b4-8dda-4e70-a882-370003074cab",
+            "name": "Motion2Contact Child",
+            "namespace": "dcoghlan",
+            "location": "https://raw.githubusercontent.com/dcoghlan/hubitat/main/Motion2Contact/motion2contact-app-child.groovy",
+            "required": true,
+            "oauth": false,
+            "primary": false,
+            "version": "1.0.0"
+        }
+    ],
+    "drivers": []
+}

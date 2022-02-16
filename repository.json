@@ -26,6 +26,19 @@
         "Motion Control",
         "Multi Sensors"
       ]
+    },
+    {
+      "id": "b35ea802-435c-41f7-b9de-9ec0a02a312a",
+      "name": "Contact2Motion",
+      "category": "Convenience",
+      "location": "https://raw.githubusercontent.com/dcoghlan/hubitat/main/Contact2Motion/packageManifest.json",
+      "description": "Mirrors a contact sensor to a virtual motion sensor",
+      "tags": [
+        "Alarm Systems",
+        "Monitoring",
+        "Motion Control",
+        "Multi Sensors"
+      ]
     }
   ]
 }

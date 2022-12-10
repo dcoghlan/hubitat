@@ -48,6 +48,7 @@
  *           thermostat mode to "off" wouldn't actually turn the device off. This has been resolved.
  *  1.0.13 - 2021-05-15 - Added initalize capability so that after a reboot the websocket connection is automatically
  *           started.
+ *  1.0.14 - 2022-12-10 - Added ability to set temperature (setCoolingTemp & setHeatingTemp).
  *
  */
 
@@ -446,7 +447,8 @@ def parse(String description) {
                 }
                 break
             default:
-                logIt("parse", "unhandled ${msgDataType}", "error")
+                logIt("parse", "unhandled msgDataType: ${msgDataType}", "error")
+                logIt("parse", "unhandled msg ${msg}", "error")
                 break
         }
         
@@ -846,6 +848,19 @@ def updateZonesTemp(data) {
 
 def setHeatingSetpoint(num) {
     logIt("setHeatingSetpoint", "${num}", "info")
+    updateSetTemp(num)
+}
+
+def setCoolingSetpoint(num) {
+    logIt("setCoolingSetpoint", "${num}", "info")
+    updateSetTemp(num)
+}
+
+def updateSetTemp(num) {
+    state.rxDelay = "True"
+    logIt("updateSetTemp", "Updating API with tempTarget: ${num}", "debug")
+    parent?.updateSettingsAPI([amOn: device.currentValue('isOn').toBoolean(), tempTarget: num, fanSpeed: device.currentValue('fanSpeed'), mode: device.currentValue('mode')])
+    
 }
 
 def setThermostatMode(String mode) {

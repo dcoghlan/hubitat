@@ -12,7 +12,7 @@ As I get more time, I may look to implement some of the other capabilities aroun
 | :------------------------ | :------ | :--------------------------------------------------------------------------------- |
 | ACSM-app-parent.groovy    | 1.0.0   | Hubitat parent app used to install the Actron Connect Service Manager application. |
 | ACSM-app-child.groovy     | 1.0.3   | Hubitat child app running the Actron Connect Service Manager.                      |
-| ACSM-driver-aircon.groovy | 1.0.12  | Hubitat driver for interacting with an Actron air conditioner via Actron Connect.  |
+| ACSM-driver-aircon.groovy | 1.0.15  | Hubitat driver for interacting with an Actron air conditioner via Actron Connect.  |
 | ACSM-driver-zone.groovy   | 1.0.0   | Hubitat driver for interacting with a Actron zone via Actron Connect.              |
 
 ---
@@ -23,6 +23,7 @@ The following features are currently available:
 
 - Able to turn main unit on/off
 - Able to turn individual zones on/off
+- Ability to set temperature set point of the wall unit
 - Read various parameters of main air conditioner unit that are made available by the Actron Connect cloud service
 - Able to read individual temperatures from all zones
 - Added ability to set Thermostat Modes ( `Auto`, `Heat`, `Cool`, `Fan Only`, `Off`). Selecting any option except `Off` will switch to the selected mode AND turn the unit on.
@@ -33,7 +34,7 @@ The following features are currently available:
 - After upgrading from earlier versions (either manually or via HPM), some errors in the logs may appear. The workaround to these errors is to trigger the `updated` method, which can be done by enabling debug logs. This also forces a reconnect of the websocket connection. If the errors still persist, please log an issue.
 - Sometimes when turning zones on/off via a button/dashboard, the switches toggle on/off. This is caused by state updates being received through the websocket connection that don't represent the state of the recently sent commands. To `delay` the processing of any received websocket updates for a period of time after a command has been processed (so hopefully the system converges on the desired state and only the last websocket command is processed), modify the preferences of the main air conditioner and set the `Set Update Delay Time` setting to a higher time. The default is 2 seconds as a base starting point. Increase as necessary.
 - Selecting any `Fan Mode` disables ESP and/or Continuous modes on the air conditioner unit. This is the same behavior as the Actron Connect application and cannot be avoided. There is no workaround as there is no API exposed to enable ESP mode or to choose continuous fan mode. To re-enable either of these modes, you must change the settings on your wall unit.
-- When using the thermostat dashboard tile, the up and down arrow for temperature do not work. This is the same for the device commands `setCoolingSetpoint` and `setHeatingSetpoint`.
+- When upgrading driver code `ACSM-driver-aircon.groovy` from < 1.0.14 to 1.0.15, the thermostat dashboard tile will not function correctly. Once the driver is upgraded, click the Initialize button on the device page to resolve.
 
 ## Installation
 

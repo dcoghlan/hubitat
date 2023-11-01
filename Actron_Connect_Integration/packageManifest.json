@@ -3,7 +3,7 @@
     "author": "Dale Coghlan",
     "minimumHEVersion": "2.2.3",
     "dateReleased": "2022-12-10",
-    "releaseNotes": "Actron Connect AirConditioner(driver): v1.0.14 - Added ability to set temperature.",
+    "releaseNotes": "Actron Connect AirConditioner(driver): v1.0.15 - Fixed dashboard thermostat tile. Must click Initilize button on device page once driver is updated to fix broken dashboard thermostat tiles.",
     "documentationLink": "https://github.com/dcoghlan/hubitat/tree/main/Actron_Connect_Integration",
     "apps": [
         {
@@ -34,7 +34,7 @@
             "namespace": "dcoghlan",
             "location": "https://raw.githubusercontent.com/dcoghlan/hubitat/main/Actron_Connect_Integration/ACSM-driver-aircon.groovy",
             "required": true,
-            "version": "1.0.14"
+            "version": "1.0.15"
         },
         {
             "id": "69daac36-1969-4429-b93e-98db810a51d1",

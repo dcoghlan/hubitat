@@ -49,6 +49,10 @@
  *  1.0.13 - 2021-05-15 - Added initalize capability so that after a reboot the websocket connection is automatically
  *           started.
  *  1.0.14 - 2022-12-10 - Added ability to set temperature (setCoolingTemp & setHeatingTemp).
+ *  1.0.15 - 2023-11-01 - Fixed issue with supportedThermostatModes & supportedThermostatFanModes using a string object
+ *           instead of a properly formatted json object.
+ *           See https://community.hubitat.com/t/supportedthermostatmodes-isnt-supposed-to-be-json-object/98565 for more
+ *           details.
  *
  */
 
@@ -206,8 +210,8 @@ def initialize() {
 }
 
 private setSupportedThermostsatDetails() {
-    sendEvent(name: 'supportedThermostatModes', value: ["Auto", "Heat", "Cool", "Fan Only", "Off"],  isStateChange: false, displayed: true)
-    sendEvent(name: 'supportedThermostatFanModes', value: ["Low", "Med", "High"],  isStateChange: false, displayed: true)
+    sendEvent(name: 'supportedThermostatModes', value: groovy.json.JsonOutput.toJson(["Auto", "Heat", "Cool", "Fan Only", "Off"]),  isStateChange: false, displayed: true)
+    sendEvent(name: 'supportedThermostatFanModes', value: groovy.json.JsonOutput.toJson(["Low", "Med", "High"]),  isStateChange: false, displayed: true)
 }
 
 private stateCleanup() {
